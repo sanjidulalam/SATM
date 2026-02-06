@@ -20,7 +20,7 @@ const FORM_MAPPING: Record<number, string> = {
   46: 'entry.1000046'
 };
 
-const STORAGE_KEY = 'SATM_RESPONSES_PRO';
+const STORAGE_KEY = 'SATM_RESPONSES_PRO_V2';
 
 const App: React.FC = () => {
   const [step, setStep] = useState(-1);
@@ -57,7 +57,6 @@ const App: React.FC = () => {
     
     setStatus('submitting');
 
-    // Attempt background POST first
     const formData = new FormData();
     Object.entries(FORM_MAPPING).forEach(([qId, entryName]) => {
       const val = responses[Number(qId)];
@@ -72,11 +71,10 @@ const App: React.FC = () => {
         mode: 'no-cors',
         body: formData
       });
-      // Success is assumed because of no-cors
       setTimeout(() => setStatus('complete'), 1500);
     } catch (e) {
       console.error("Sync error:", e);
-      setStatus('complete'); // Still transition to show manual options
+      setStatus('complete'); 
     }
   };
 
@@ -92,12 +90,19 @@ const App: React.FC = () => {
 
   if (status === 'complete') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-[#020617] fade-in">
-        <div className="max-w-2xl w-full p-12 bg-slate-900/40 border border-white/10 rounded-[4rem] text-center backdrop-blur-3xl shadow-2xl">
-          <div className="w-20 h-20 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-10 text-3xl">✓</div>
-          <h2 className="text-5xl font-bold serif italic text-white mb-6">Archive Processed.</h2>
-          <p className="text-slate-400 mb-10 leading-relaxed text-lg">
-            Your insights have been captured. If you want to be 100% sure your data reached the official database, please use the manual submission link below.
+      <div className="min-h-screen flex items-center justify-center p-6 bg-[#020617] fade-in relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+          <div className="absolute top-[10%] left-[10%] w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full"></div>
+          <div className="absolute bottom-[10%] right-[10%] w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full"></div>
+        </div>
+
+        <div className="max-w-2xl w-full p-12 lg:p-16 bg-slate-900/40 border border-white/10 rounded-[4rem] text-center backdrop-blur-3xl shadow-2xl relative z-10">
+          <div className="w-24 h-24 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-10 text-4xl animate-pulse">✨</div>
+          <h2 className="text-5xl lg:text-7xl font-bold serif italic text-white mb-6">Thank You.</h2>
+          <p className="text-slate-300 mb-10 leading-relaxed text-xl font-light">
+            Your contribution to the <span className="text-indigo-400 font-bold">SATM Protocol</span> is invaluable. 
+            We have captured your insights to help redefine digital authenticity.
           </p>
           
           <div className="space-y-4">
@@ -105,22 +110,32 @@ const App: React.FC = () => {
               href={getPrefilledUrl()} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="block w-full py-6 bg-indigo-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+              className="group block w-full py-6 bg-white text-black rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-50 transition-all shadow-xl active:scale-95"
             >
-              Manual Verification (Open Google Form)
+              Verify & Official Submit
+              <span className="block text-[8px] font-normal tracking-normal normal-case opacity-60 mt-1">Opens Google Form with your data</span>
             </a>
-            <button 
-              onClick={downloadData}
-              className="block w-full py-6 bg-white/5 text-slate-300 rounded-3xl font-black text-xs uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all"
-            >
-              Backup: Download Responses (.json)
-            </button>
+            <div className="grid grid-cols-1 gap-3">
+              <button 
+                onClick={downloadData}
+                className="w-full py-5 bg-white/5 text-slate-200 rounded-3xl font-bold text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all"
+              >
+                Download Backup (.json)
+              </button>
+            </div>
+            
             <button 
               onClick={() => window.location.reload()}
-              className="block w-full py-4 text-slate-500 hover:text-white transition-all text-[10px] uppercase font-bold tracking-widest"
+              className="mt-8 py-2 text-indigo-400 hover:text-white transition-all text-[11px] uppercase font-black tracking-[0.4em] block mx-auto"
             >
-              Reset Interface
+              Restart Protocol
             </button>
+          </div>
+
+          <div className="mt-16 pt-8 border-t border-white/5">
+            <div className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">
+              @ST-research-team
+            </div>
           </div>
         </div>
       </div>
@@ -131,19 +146,24 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-[#020617] relative overflow-hidden">
         <div className="relative z-10">
-          <div className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.8em] mb-12">Protocol Ready</div>
+          <div className="text-indigo-500 font-black text-[11px] uppercase tracking-[1em] mb-12">System: Operational</div>
           <h1 className="text-8xl md:text-[12rem] serif font-bold italic tracking-tighter mb-8 text-white leading-none">
-            Authentic <span className="text-slate-900 not-italic opacity-40">Potential</span>
+            Authentic <span className="text-slate-900 not-italic opacity-50">Potential</span>
           </h1>
-          <p className="max-w-xl mx-auto text-slate-500 font-light text-2xl mb-16">
-            A research study into human motivation and digital curation.
+          <p className="max-w-2xl mx-auto text-slate-400 font-light text-2xl mb-16 px-4">
+            An immersive research initiative by the <span className="text-white font-medium">@ST-research-team</span> exploring digital identity.
           </p>
           <button 
             onClick={() => setStep(0)} 
-            className="px-32 py-10 bg-white text-black rounded-full font-bold text-3xl hover:scale-110 active:scale-95 transition-all shadow-2xl"
+            className="group px-32 py-10 bg-white text-black rounded-full font-bold text-3xl hover:scale-110 active:scale-95 transition-all shadow-2xl relative"
           >
             Access Module
+            <div className="absolute inset-0 bg-white rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity"></div>
           </button>
+        </div>
+        
+        <div className="absolute bottom-12 left-0 w-full text-center">
+            <div className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-700">@ST-research-team // 2024</div>
         </div>
       </div>
     );
@@ -155,36 +175,37 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#020617] text-slate-100 selection:bg-indigo-500/30">
       {/* HUD Header */}
-      <div className="fixed top-0 left-0 w-full z-50 p-10 flex justify-between items-end bg-gradient-to-b from-slate-950/50 to-transparent">
+      <div className="fixed top-0 left-0 w-full z-50 p-8 lg:p-12 flex justify-between items-end bg-gradient-to-b from-slate-950/80 to-transparent backdrop-blur-sm lg:backdrop-blur-none">
         <div className="flex items-center gap-6">
-          <div className="w-[1px] h-12 bg-white/20"></div>
+          <div className="w-[1px] h-14 bg-indigo-500/40"></div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 mb-1">Module {q.id}</div>
-            <div className="text-sm font-bold text-indigo-400 uppercase tracking-widest">{q.section}</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500 mb-1">Module {q.id}</div>
+            <div className="text-lg lg:text-xl font-bold text-indigo-400 uppercase tracking-widest leading-none">{q.section}</div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-3">
-           <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.4em]">{Math.round(progress)}% Progress</div>
-           <div className="w-64 h-[2px] bg-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-500 transition-all duration-700" style={{ width: `${progress}%` }}></div>
+        <div className="hidden lg:flex flex-col items-end gap-3">
+           <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">{Math.round(progress)}% Recorded</div>
+           <div className="w-80 h-[2px] bg-white/5 rounded-full overflow-hidden">
+              <div className="h-full bg-indigo-500 transition-all duration-1000 ease-out" style={{ width: `${progress}%` }}></div>
            </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row h-screen pt-24">
+      <div className="flex-1 flex flex-col lg:flex-row h-screen pt-32 lg:pt-24 overflow-hidden">
         {/* Left: Question Content */}
-        <div className="flex-1 flex flex-col justify-center p-12 lg:p-32">
-          <div className="max-w-3xl fade-in" key={q.id}>
-            <h2 className="text-5xl lg:text-7xl serif italic leading-[1.1] text-white tracking-tight drop-shadow-2xl">
+        <div className="flex-1 flex flex-col justify-center p-8 lg:p-32 overflow-y-auto">
+          <div className="max-w-4xl fade-in" key={q.id}>
+            <h2 className="text-4xl lg:text-8xl serif italic leading-[1] text-white tracking-tight drop-shadow-2xl">
               {q.text}
             </h2>
+            {q.subtext && <p className="mt-8 text-slate-400 text-lg lg:text-xl font-light">{q.subtext}</p>}
           </div>
         </div>
 
         {/* Right: Interaction Panel */}
-        <div className="flex-1 flex flex-col justify-center p-8 lg:p-24 bg-slate-950/40 backdrop-blur-3xl border-l border-white/5 shadow-[-40px_0_100px_rgba(0,0,0,0.5)]">
-          <div className="max-w-md w-full mx-auto">
-            <div className="min-h-[450px] flex flex-col justify-center fade-in" key={`input-${q.id}`}>
+        <div className="flex-1 flex flex-col justify-center p-6 lg:p-24 bg-slate-950/50 backdrop-blur-3xl border-l border-white/5 shadow-[-40px_0_120px_rgba(0,0,0,0.6)] relative">
+          <div className="max-w-md w-full mx-auto flex flex-col h-full">
+            <div className="flex-1 flex flex-col justify-center fade-in" key={`input-${q.id}`}>
               
               {q.type === 'choice' && (
                 <div className="space-y-4">
@@ -192,10 +213,10 @@ const App: React.FC = () => {
                     <button 
                       key={opt}
                       onClick={() => saveAnswer(opt, true)}
-                      className={`w-full p-8 text-left rounded-[2.5rem] border-2 transition-all flex justify-between items-center group ${responses[q.id] === opt ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5 hover:border-white/10'}`}
+                      className={`w-full p-7 lg:p-8 text-left rounded-[2.5rem] border-2 transition-all flex justify-between items-center group active:scale-[0.98] ${responses[q.id] === opt ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5 hover:border-white/10'}`}
                     >
-                      <span className={`text-lg font-bold transition-all ${responses[q.id] === opt ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>{opt}</span>
-                      <div className={`w-6 h-6 rounded-full border-2 ${responses[q.id] === opt ? 'bg-indigo-500 border-indigo-500 scale-125' : 'border-slate-800'}`}></div>
+                      <span className={`text-lg lg:text-xl font-bold transition-all ${responses[q.id] === opt ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{opt}</span>
+                      <div className={`w-6 h-6 rounded-full border-2 transition-transform ${responses[q.id] === opt ? 'bg-indigo-500 border-indigo-500 scale-125' : 'border-slate-800'}`}></div>
                     </button>
                   ))}
                 </div>
@@ -208,26 +229,29 @@ const App: React.FC = () => {
                       <button 
                         key={num}
                         onClick={() => saveAnswer(num, true)}
-                        className={`flex-1 aspect-square rounded-[2rem] text-3xl font-black border-2 transition-all flex items-center justify-center ${responses[q.id] === num ? 'bg-indigo-600 border-indigo-600 text-white scale-110 shadow-2xl' : 'border-white/5 bg-white/5 text-slate-800 hover:text-slate-400'}`}
+                        className={`flex-1 aspect-square rounded-[1.5rem] lg:rounded-[2rem] text-3xl font-black border-2 transition-all flex items-center justify-center active:scale-90 ${responses[q.id] === num ? 'bg-indigo-600 border-indigo-600 text-white scale-110 shadow-2xl shadow-indigo-500/40' : 'border-white/5 bg-white/5 text-slate-700 hover:text-slate-300'}`}
                       >
                         {num}
                       </button>
                     ))}
                   </div>
-                  <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.5em] text-slate-700 px-4">
-                    <span>Low</span>
-                    <span>High</span>
+                  <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.5em] text-slate-500 px-4">
+                    <span>Dissimilar</span>
+                    <span>Identical</span>
                   </div>
                 </div>
               )}
 
               {q.type === 'text' && (
-                <textarea 
-                  className="w-full h-80 bg-white/5 border-2 border-white/5 rounded-[3.5rem] p-10 text-xl text-white outline-none focus:border-indigo-500/40 transition-all resize-none placeholder:text-slate-800"
-                  placeholder="Capture reflection..."
-                  value={responses[q.id] || ""}
-                  onChange={(e) => saveAnswer(e.target.value)}
-                />
+                <div className="relative">
+                  <textarea 
+                    className="w-full h-80 bg-white/5 border-2 border-white/5 rounded-[3.5rem] p-10 text-xl text-white outline-none focus:border-indigo-500/40 transition-all resize-none placeholder:text-slate-700"
+                    placeholder="Enter your reflection..."
+                    value={responses[q.id] || ""}
+                    onChange={(e) => saveAnswer(e.target.value)}
+                  />
+                  <div className="absolute bottom-10 right-10 text-[9px] font-black uppercase tracking-widest text-slate-700 pointer-events-none">Text Buffer</div>
+                </div>
               )}
 
               {q.type === 'multi-choice' && (
@@ -241,10 +265,10 @@ const App: React.FC = () => {
                           const current = responses[q.id] || [];
                           saveAnswer(active ? current.filter((i:any)=>i!==opt) : [...current, opt]);
                         }}
-                        className={`w-full p-6 text-left rounded-3xl border-2 transition-all flex justify-between items-center ${active ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5'}`}
+                        className={`w-full p-6 text-left rounded-3xl border-2 transition-all flex justify-between items-center active:scale-[0.99] ${active ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5'}`}
                       >
-                        <span className="font-bold text-slate-300">{opt}</span>
-                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center ${active ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'}`}>
+                        <span className={`font-bold ${active ? 'text-white' : 'text-slate-400'}`}>{opt}</span>
+                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${active ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'}`}>
                           {active && <span className="text-white text-xs">✓</span>}
                         </div>
                       </button>
@@ -256,25 +280,25 @@ const App: React.FC = () => {
               {q.type === 'consent' && (
                 <button 
                   onClick={() => saveAnswer(!responses[q.id])}
-                  className={`w-full p-12 rounded-[4rem] border-2 text-left flex items-center gap-10 transition-all ${responses[q.id] ? 'border-indigo-500 bg-indigo-500/5' : 'border-white/5 hover:bg-white/5'}`}
+                  className={`w-full p-10 lg:p-12 rounded-[4rem] border-2 text-left flex items-center gap-8 lg:gap-10 transition-all active:scale-[0.97] ${responses[q.id] ? 'border-indigo-500 bg-indigo-500/5' : 'border-white/5 hover:bg-white/5'}`}
                 >
                   <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${responses[q.id] ? 'bg-indigo-500 border-indigo-500 scale-110 shadow-lg' : 'border-slate-800'}`}>
                     {responses[q.id] && <span className="text-white text-2xl">✓</span>}
                   </div>
                   <div>
-                    <div className="font-bold text-2xl text-white italic serif mb-1">Grant Access</div>
-                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Authorize transmission</div>
+                    <div className="font-bold text-2xl text-white italic serif mb-1">Final Authorization</div>
+                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Research permission</div>
                   </div>
                 </button>
               )}
             </div>
 
             {/* Nav Footer */}
-            <div className="mt-20 pt-12 border-t border-white/5 flex items-center justify-between">
+            <div className="mt-12 py-10 border-t border-white/5 flex items-center justify-between">
               <button 
                 onClick={() => setStep(s => s - 1)} 
                 disabled={step === 0}
-                className="text-[11px] font-black uppercase tracking-[0.6em] text-slate-700 hover:text-white disabled:opacity-0 transition-all"
+                className="text-[11px] font-black uppercase tracking-[0.6em] text-slate-500 hover:text-white disabled:opacity-0 transition-all px-4"
               >
                 Back
               </button>
@@ -282,7 +306,7 @@ const App: React.FC = () => {
               {step < QUESTIONS.length - 1 ? (
                 <button 
                   onClick={() => setStep(s => s + 1)}
-                  className="px-20 py-7 bg-white text-black rounded-full font-black text-xs uppercase tracking-[0.4em] hover:scale-110 active:scale-95 transition-all shadow-2xl"
+                  className="px-16 lg:px-20 py-7 bg-white text-black rounded-full font-black text-xs uppercase tracking-[0.3em] hover:scale-110 active:scale-95 transition-all shadow-2xl"
                 >
                   Continue
                 </button>
@@ -290,11 +314,17 @@ const App: React.FC = () => {
                 <button 
                   onClick={handleFinalSubmit}
                   disabled={status === 'submitting'}
-                  className="px-20 py-7 bg-indigo-600 text-white rounded-full font-black text-xs uppercase tracking-[0.4em] hover:scale-110 active:scale-95 transition-all shadow-2xl disabled:opacity-50"
+                  className="px-16 lg:px-20 py-7 bg-indigo-600 text-white rounded-full font-black text-xs uppercase tracking-[0.3em] hover:scale-110 active:scale-95 transition-all shadow-2xl disabled:opacity-50"
                 >
-                  {status === 'submitting' ? "Transmitting..." : "Sync Protocol"}
+                  {status === 'submitting' ? "Transmitting..." : "Seal Module"}
                 </button>
               )}
+            </div>
+
+            <div className="absolute bottom-6 left-0 w-full text-center pointer-events-none">
+              <span className="text-[9px] font-black uppercase tracking-[0.8em] text-slate-800 opacity-60">
+                @ST-research-team
+              </span>
             </div>
           </div>
         </div>
