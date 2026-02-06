@@ -9,15 +9,16 @@ const GOOGLE_FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSe5QizV-h
 // These must match your form's internal IDs exactly
 const FORM_MAPPING: Record<number, string> = {
   1: 'entry.1071290361', 2: 'entry.326184573', 3: 'entry.1061016185', 4: 'entry.1666183569', 5: 'entry.1443380532',
-  6: 'entry.1000006', 7: 'entry.1000007', 8: 'entry.1000008', 9: 'entry.1000009', 10: 'entry.1000010',
-  11: 'entry.1000011', 12: 'entry.1000012', 13: 'entry.1000013', 14: 'entry.1000014', 15: 'entry.1000015',
-  16: 'entry.1000016', 17: 'entry.1000017', 18: 'entry.1000018', 19: 'entry.1000019', 20: 'entry.1000020',
-  21: 'entry.1000021', 22: 'entry.1000022', 23: 'entry.1000023', 24: 'entry.1000024', 25: 'entry.1000025',
-  26: 'entry.1000026', 27: 'entry.1000027', 28: 'entry.1000028', 29: 'entry.1000029', 30: 'entry.1000030',
-  31: 'entry.1000031', 32: 'entry.1000032', 33: 'entry.1000033', 34: 'entry.1000034', 35: 'entry.1000035',
-  36: 'entry.1000036', 37: 'entry.1000037', 38: 'entry.1000038', 39: 'entry.1000039', 40: 'entry.1000040',
-  41: 'entry.1000041', 42: 'entry.1000042', 43: 'entry.1000043', 44: 'entry.1000044', 45: 'entry.1000045',
-  46: 'entry.1000046'
+  6: 'entry.1618713911', 7: 'entry.1129971170', 8: 'entry.314606889', 9: 'entry.1660632923', 10: 'entry.1145664182',
+  11: 'entry.251814733', 12: 'entry.1813740654', 13: 'entry.1518143852', 14: 'entry.725572082', 15: 'entry.1062517478',
+  16: 'entry.1187095218', 17: 'entry.1557776103', 18: 'entry.1552978670', 19: 'entry.19578391', 20: 'entry.523311605',
+  21: 'entry.1538962669', 22: 'entry.1483922759', 23: 'entry.45645361', 24: 'entry.1451160984', 25: 'entry.1373458939',
+  26: 'entry.2120013189', 27: 'entry.1303452281', 28: 'entry.50165232', 29: 'entry.240883325', 30: 'entry.1201893471',
+  31: 'entry.882640380', 32: 'entry.141086092', 33: 'entry.1494592236', 34: 'entry.411324695', 35: 'entry.470867287',
+  36: 'entry.1078632822', 37: 'entry.1133957921', 38: 'entry.1145582191', 39: 'entry.1932481296', 40: 'entry.1943447158',
+  41: 'entry.726853438', 42: 'entry.1599590245', 43: 'entry.2085314761', 44: 'entry.522745442', 45: 'entry.885137032',
+  46: 'entry.1350016819'
+```
 };
 
 const STORAGE_KEY = 'SATM_RESPONSES_PRO_V2';
