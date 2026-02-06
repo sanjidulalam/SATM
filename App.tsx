@@ -5,8 +5,8 @@ import { QUESTIONS } from './constants.tsx';
  * GOOGLE SHEET CONNECTION:
  * Using /exec for production. /dev will NOT work for public users.
  */
-const DEPLOYMENT_ID = 'AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn';
-const GOOGLE_SHEET_URL = `https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`;
+const DEPLOYMENT_ID = 'AKfycbxZdCZpWRuLcCQ3aIV4hNnzLco-RA7gezlGOqhWQWsAaWWHXFlJxyP9AlaMrPbR0CVB1Q';
+const GOOGLE_SHEET_URL = `https://script.google.com/macros/s/AKfycbxZdCZpWRuLcCQ3aIV4hNnzLco-RA7gezlGOqhWQWsAaWWHXFlJxyP9AlaMrPbR0CVB1Q/exec`;
 
 const App: React.FC = () => {
   const [step, setStep] = useState(-1);
