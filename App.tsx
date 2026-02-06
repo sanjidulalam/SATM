@@ -5,7 +5,7 @@ import { QUESTIONS } from './constants.tsx';
  * GOOGLE SHEET CONNECTION
  * Ensure this URL is from your 'New Deployment' (Anyone has access).
  */
-const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn/exec';
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxMHeO13DgNDGikt9gZllcCTmWUCZmWmJ8lwt0V6b4rFANpZpDKoBVgD5eyrqkzZ-Cz/exec';
 const STORAGE_KEY = 'satm_survey_backup_v2';
 
 const App: React.FC = () => {
