@@ -1,5 +1,4 @@
-
-import { Question, Section } from './types';
+import { Question, Section } from './types.ts';
 
 export const SECTIONS: Section[] = [
   { id: 'intro', title: 'Welcome', description: 'Rediscovering Authentic Potential in the Digital Age' },

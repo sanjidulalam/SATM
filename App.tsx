@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QUESTIONS, SECTIONS } from './constants';
-import { SurveyResponse, Question } from './types';
+import { QUESTIONS, SECTIONS } from './constants.tsx';
+import { SurveyResponse, Question } from './types.ts';
 
 // Types & Interfaces
 interface QuestionStepProps {
