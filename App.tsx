@@ -18,11 +18,11 @@ const GOOGLE_FORM_ID = '1TMVjwLRkEipWRwMYabQ610NjhSGmbaW2j7bFZNrc_j0';
  * 4. Paste that link in Notepad and look for "&entry.123456789=1"
  */
 const FORM_MAPPING: Record<number, string> = {
-  1: 'entry.1000001', // Age
-  2: 'entry.1000002', // Gender
-  3: 'entry.1000003', // Academic Level
-  4: 'entry.1000004', // Field
-  5: 'entry.1000005', // Years
+  1: 'entry.1071290361', // Age
+  2: 'entry.326184573', // Gender
+  3: 'entry.1061016185', // Academic Level
+  4: 'entry.1666183569', // Field
+  5: 'entry.1443380532', // Years
   6: 'entry.1000006', // Q6
   7: 'entry.1000007', // Q7
   8: 'entry.1000008', // Q8
