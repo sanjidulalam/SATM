@@ -2,29 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { QUESTIONS } from './constants.tsx';
 
 /**
- * 🛠️ CORE CONFIGURATION
- * Extracted from your public link: 1FAIpQLSe5QizV-hupWjb6GnBOxOZaMMs9z7b3n-N327oeTp9YblPqOQ
+ * 🛠️ CONFIGURATION
  */
-const GOOGLE_FORM_ID = '1FAIpQLSe5QizV-hupWjb6GnBOxOZaMMs9z7b3n-N327oeTp9YblPqOQ'; 
+const GOOGLE_FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSe5QizV-hupWjb6GnBOxOZaMMs9z7b3n-N327oeTp9YblPqOQ';
 
-/**
- * 🚨 CRITICAL MAPPING
- * You MUST replace these placeholder numbers (e.g. '1000001') with the 
- * actual numbers from your Google Form "Pre-filled link".
- * 
- * Step 1: In Google Form, click (...) -> "Get pre-filled link"
- * Step 2: Answer every question with a simple number (1, 2, 3...)
- * Step 3: Click "Get Link" and paste it in a notepad.
- * Step 4: Look for &entry.123456789=1. The '123456789' part is what you put here.
- */
+// These must match your form's internal IDs exactly
 const FORM_MAPPING: Record<number, string> = {
-  1: 'entry.1071290361', // Age
-  2: 'entry.326184573',  // Gender
-  3: 'entry.1061016185', // Academic Level
-  4: 'entry.1666183569', // Field
-  5: 'entry.1443380532', // Years of use
-  6: 'entry.1000006', // Q6 ... and so on for all 46 questions
-  7: 'entry.1000007', 8: 'entry.1000008', 9: 'entry.1000009', 10: 'entry.1000010',
+  1: 'entry.1071290361', 2: 'entry.326184573', 3: 'entry.1061016185', 4: 'entry.1666183569', 5: 'entry.1443380532',
+  6: 'entry.1000006', 7: 'entry.1000007', 8: 'entry.1000008', 9: 'entry.1000009', 10: 'entry.1000010',
   11: 'entry.1000011', 12: 'entry.1000012', 13: 'entry.1000013', 14: 'entry.1000014', 15: 'entry.1000015',
   16: 'entry.1000016', 17: 'entry.1000017', 18: 'entry.1000018', 19: 'entry.1000019', 20: 'entry.1000020',
   21: 'entry.1000021', 22: 'entry.1000022', 23: 'entry.1000023', 24: 'entry.1000024', 25: 'entry.1000025',
@@ -35,7 +20,7 @@ const FORM_MAPPING: Record<number, string> = {
   46: 'entry.1000046'
 };
 
-const STORAGE_KEY = 'SATM_V2_STORAGE';
+const STORAGE_KEY = 'SATM_RESPONSES_PRO';
 
 const App: React.FC = () => {
   const [step, setStep] = useState(-1);
@@ -51,78 +36,92 @@ const App: React.FC = () => {
 
   const saveAnswer = (val: any, autoAdvance = false) => {
     setResponses(prev => ({ ...prev, [QUESTIONS[step].id]: val }));
-    if (autoAdvance) {
-      setTimeout(() => {
-        if (step < QUESTIONS.length - 1) setStep(s => s + 1);
-      }, 450);
+    if (autoAdvance && step < QUESTIONS.length - 1) {
+      setTimeout(() => setStep(s => s + 1), 400);
     }
   };
 
-  const submitFinal = () => {
-    if (!responses[46]) return alert("Research protocol requires explicit consent to proceed.");
+  const getPrefilledUrl = () => {
+    const params = new URLSearchParams();
+    Object.entries(FORM_MAPPING).forEach(([qId, entryName]) => {
+      const val = responses[Number(qId)];
+      if (val !== undefined) {
+        params.append(entryName, Array.isArray(val) ? val.join(', ') : String(val));
+      }
+    });
+    return `${GOOGLE_FORM_BASE_URL}/viewform?${params.toString()}`;
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!responses[46]) return alert("Please authorize the research protocol first.");
     
     setStatus('submitting');
 
-    // Create a form programmatically
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`;
-    form.target = 'hidden_submission_frame';
-
-    // Populate form inputs
+    // Attempt background POST first
+    const formData = new FormData();
     Object.entries(FORM_MAPPING).forEach(([qId, entryName]) => {
-      const value = responses[Number(qId)];
-      if (value !== undefined) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = entryName;
-        input.value = Array.isArray(value) ? value.join(', ') : String(value);
-        form.appendChild(input);
+      const val = responses[Number(qId)];
+      if (val !== undefined) {
+        formData.append(entryName, Array.isArray(val) ? val.join(', ') : String(val));
       }
     });
 
-    // Create hidden iframe if it doesn't exist
-    let iframe = document.getElementById('hidden_submission_frame') as HTMLIFrameElement;
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.id = 'hidden_submission_frame';
-      iframe.name = 'hidden_submission_frame';
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-    }
-
-    document.body.appendChild(form);
-    
-    // Submit!
     try {
-      form.submit();
+      await fetch(`${GOOGLE_FORM_BASE_URL}/formResponse`, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      });
+      // Success is assumed because of no-cors
+      setTimeout(() => setStatus('complete'), 1500);
     } catch (e) {
-      console.error("Submission trigger failed", e);
+      console.error("Sync error:", e);
+      setStatus('complete'); // Still transition to show manual options
     }
+  };
 
-    // Since we can't detect cross-origin success, we wait for a visual confirmation
-    setTimeout(() => {
-      setStatus('complete');
-      localStorage.removeItem(STORAGE_KEY);
-      if (form.parentNode) document.body.removeChild(form);
-    }, 2500);
+  const downloadData = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(responses, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "satm_responses.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
   };
 
   if (status === 'complete') {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-[#020617] fade-in">
-        <div className="max-w-xl w-full p-16 bg-slate-900/40 border border-white/10 rounded-[4rem] text-center backdrop-blur-3xl shadow-2xl">
-          <div className="w-24 h-24 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-12 text-4xl animate-bounce">✓</div>
-          <h2 className="text-6xl font-bold serif italic text-white mb-6">Archive Sealed.</h2>
-          <p className="text-slate-400 mb-12 leading-relaxed text-xl font-light">
-            Transmission successful. Your data has been integrated into the Self-Authentication research database.
+        <div className="max-w-2xl w-full p-12 bg-slate-900/40 border border-white/10 rounded-[4rem] text-center backdrop-blur-3xl shadow-2xl">
+          <div className="w-20 h-20 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-10 text-3xl">✓</div>
+          <h2 className="text-5xl font-bold serif italic text-white mb-6">Archive Processed.</h2>
+          <p className="text-slate-400 mb-10 leading-relaxed text-lg">
+            Your insights have been captured. If you want to be 100% sure your data reached the official database, please use the manual submission link below.
           </p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="w-full py-7 bg-white text-black rounded-full font-black text-xs uppercase tracking-[0.3em] hover:scale-105 active:scale-95 transition-all"
-          >
-            New Session
-          </button>
+          
+          <div className="space-y-4">
+            <a 
+              href={getPrefilledUrl()} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block w-full py-6 bg-indigo-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+            >
+              Manual Verification (Open Google Form)
+            </a>
+            <button 
+              onClick={downloadData}
+              className="block w-full py-6 bg-white/5 text-slate-300 rounded-3xl font-black text-xs uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all"
+            >
+              Backup: Download Responses (.json)
+            </button>
+            <button 
+              onClick={() => window.location.reload()}
+              className="block w-full py-4 text-slate-500 hover:text-white transition-all text-[10px] uppercase font-bold tracking-widest"
+            >
+              Reset Interface
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -130,22 +129,20 @@ const App: React.FC = () => {
 
   if (step === -1) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-[#020617] relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.08),transparent_70%)]"></div>
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="text-indigo-500 font-black text-[11px] uppercase tracking-[1em] mb-16 animate-pulse">Interface: Operational</div>
-          <h1 className="text-[15vw] md:text-[12rem] serif font-bold italic tracking-tighter mb-10 text-white leading-none select-none">
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-[#020617] relative overflow-hidden">
+        <div className="relative z-10">
+          <div className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.8em] mb-12">Protocol Ready</div>
+          <h1 className="text-8xl md:text-[12rem] serif font-bold italic tracking-tighter mb-8 text-white leading-none">
             Authentic <span className="text-slate-900 not-italic opacity-40">Potential</span>
           </h1>
-          <p className="max-w-xl mx-auto text-slate-500 font-light leading-relaxed text-2xl mb-16">
-            A deep-dive research protocol into human motivation and digital identity curation.
+          <p className="max-w-xl mx-auto text-slate-500 font-light text-2xl mb-16">
+            A research study into human motivation and digital curation.
           </p>
           <button 
-            onClick={() => setStep(0)}
-            className="group relative px-24 py-10 bg-white text-black rounded-full font-bold text-3xl transition-all hover:scale-110 active:scale-95 shadow-[0_40px_80px_rgba(255,255,255,0.05)]"
+            onClick={() => setStep(0)} 
+            className="px-32 py-10 bg-white text-black rounded-full font-bold text-3xl hover:scale-110 active:scale-95 transition-all shadow-2xl"
           >
-            Begin Protocol
-            <div className="absolute inset-0 rounded-full bg-white animate-ping opacity-0 group-hover:opacity-10"></div>
+            Access Module
           </button>
         </div>
       </div>
@@ -156,89 +153,85 @@ const App: React.FC = () => {
   const progress = ((step + 1) / QUESTIONS.length) * 100;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#020617] text-slate-100 selection:bg-indigo-500/40">
-      {/* HUD Bar */}
-      <div className="fixed top-0 left-0 w-full z-50 px-12 py-10 flex justify-between items-end backdrop-blur-sm bg-gradient-to-b from-slate-950/50 to-transparent">
-        <div className="flex items-center gap-8">
-          <div className="w-[1px] h-14 bg-white/20"></div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 mb-2">Module {q.id.toString().padStart(2, '0')}</span>
-            <span className="text-lg font-bold text-indigo-400 uppercase tracking-widest">{q.section}</span>
+    <div className="min-h-screen flex flex-col bg-[#020617] text-slate-100 selection:bg-indigo-500/30">
+      {/* HUD Header */}
+      <div className="fixed top-0 left-0 w-full z-50 p-10 flex justify-between items-end bg-gradient-to-b from-slate-950/50 to-transparent">
+        <div className="flex items-center gap-6">
+          <div className="w-[1px] h-12 bg-white/20"></div>
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 mb-1">Module {q.id}</div>
+            <div className="text-sm font-bold text-indigo-400 uppercase tracking-widest">{q.section}</div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-4">
-           <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">{Math.round(progress)}% Transmission Complete</span>
-           <div className="w-80 h-[1px] bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-500 transition-all duration-700 ease-in-out" style={{ width: `${progress}%` }}></div>
+        <div className="flex flex-col items-end gap-3">
+           <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.4em]">{Math.round(progress)}% Progress</div>
+           <div className="w-64 h-[2px] bg-white/5 rounded-full overflow-hidden">
+              <div className="h-full bg-indigo-500 transition-all duration-700" style={{ width: `${progress}%` }}></div>
            </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Left: Content */}
-        <div className="flex-[1.2] flex flex-col justify-center p-12 lg:p-40 pt-48 lg:pt-0">
-          <div className="max-w-4xl fade-in" key={q.id}>
-            <h2 className="text-6xl lg:text-9xl serif italic leading-[1] text-white tracking-tight drop-shadow-2xl">
+      <div className="flex-1 flex flex-col lg:flex-row h-screen pt-24">
+        {/* Left: Question Content */}
+        <div className="flex-1 flex flex-col justify-center p-12 lg:p-32">
+          <div className="max-w-3xl fade-in" key={q.id}>
+            <h2 className="text-5xl lg:text-7xl serif italic leading-[1.1] text-white tracking-tight drop-shadow-2xl">
               {q.text}
             </h2>
-            {q.subtext && <p className="mt-12 text-slate-500 text-2xl font-light max-w-2xl">{q.subtext}</p>}
           </div>
         </div>
 
-        {/* Right: Interactions */}
-        <div className="flex-1 flex flex-col justify-center p-8 lg:p-32 bg-slate-950/40 backdrop-blur-2xl border-l border-white/5 shadow-[-40px_0_100px_rgba(0,0,0,0.5)]">
-          <div className="max-w-lg w-full mx-auto relative">
-            <div className="min-h-[500px] flex flex-col justify-center fade-in" key={`input-${q.id}`}>
+        {/* Right: Interaction Panel */}
+        <div className="flex-1 flex flex-col justify-center p-8 lg:p-24 bg-slate-950/40 backdrop-blur-3xl border-l border-white/5 shadow-[-40px_0_100px_rgba(0,0,0,0.5)]">
+          <div className="max-w-md w-full mx-auto">
+            <div className="min-h-[450px] flex flex-col justify-center fade-in" key={`input-${q.id}`}>
               
               {q.type === 'choice' && (
-                <div className="space-y-5">
-                  {q.options?.map((opt, idx) => (
+                <div className="space-y-4">
+                  {q.options?.map((opt) => (
                     <button 
                       key={opt}
                       onClick={() => saveAnswer(opt, true)}
-                      className={`w-full p-10 text-left rounded-[3rem] border-2 transition-all flex justify-between items-center group ${responses[q.id] === opt ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5 hover:border-white/10'}`}
+                      className={`w-full p-8 text-left rounded-[2.5rem] border-2 transition-all flex justify-between items-center group ${responses[q.id] === opt ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5 hover:border-white/10'}`}
                     >
-                      <span className={`text-xl font-bold transition-all ${responses[q.id] === opt ? 'text-white translate-x-2' : 'text-slate-500 group-hover:text-slate-300'}`}>{opt}</span>
-                      <div className={`w-8 h-8 rounded-full border-2 transition-all ${responses[q.id] === opt ? 'bg-indigo-500 border-indigo-500 scale-125' : 'border-slate-800'}`}></div>
+                      <span className={`text-lg font-bold transition-all ${responses[q.id] === opt ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>{opt}</span>
+                      <div className={`w-6 h-6 rounded-full border-2 ${responses[q.id] === opt ? 'bg-indigo-500 border-indigo-500 scale-125' : 'border-slate-800'}`}></div>
                     </button>
                   ))}
                 </div>
               )}
 
               {q.type === 'scale' && (
-                <div className="py-16">
-                  <div className="flex justify-between gap-4 mb-16">
+                <div className="py-12">
+                  <div className="flex justify-between gap-3 mb-12">
                     {[1, 2, 3, 4, 5].map(num => (
                       <button 
                         key={num}
                         onClick={() => saveAnswer(num, true)}
-                        className={`flex-1 aspect-square rounded-[2rem] text-4xl font-black border-2 transition-all flex items-center justify-center ${responses[q.id] === num ? 'bg-indigo-600 border-indigo-600 text-white scale-110 shadow-2xl shadow-indigo-500/40' : 'border-white/5 bg-white/5 text-slate-800 hover:text-slate-400'}`}
+                        className={`flex-1 aspect-square rounded-[2rem] text-3xl font-black border-2 transition-all flex items-center justify-center ${responses[q.id] === num ? 'bg-indigo-600 border-indigo-600 text-white scale-110 shadow-2xl' : 'border-white/5 bg-white/5 text-slate-800 hover:text-slate-400'}`}
                       >
                         {num}
                       </button>
                     ))}
                   </div>
-                  <div className="flex justify-between text-[12px] font-black uppercase tracking-[0.5em] text-slate-700 px-6">
-                    <span>Dissimilar</span>
-                    <span>Identical</span>
+                  <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.5em] text-slate-700 px-4">
+                    <span>Low</span>
+                    <span>High</span>
                   </div>
                 </div>
               )}
 
               {q.type === 'text' && (
-                <div className="relative group">
-                  <textarea 
-                    className="w-full h-96 bg-white/5 border-2 border-white/5 rounded-[4rem] p-12 text-2xl text-white outline-none focus:border-indigo-500/50 transition-all resize-none placeholder:text-slate-800"
-                    placeholder="Enter deep reflection..."
-                    value={responses[q.id] || ""}
-                    onChange={(e) => saveAnswer(e.target.value)}
-                  />
-                  <div className="absolute bottom-10 right-12 text-[10px] font-black uppercase tracking-widest text-slate-700 pointer-events-none group-focus-within:text-indigo-500/50 transition-colors">Digital Input Buffer</div>
-                </div>
+                <textarea 
+                  className="w-full h-80 bg-white/5 border-2 border-white/5 rounded-[3.5rem] p-10 text-xl text-white outline-none focus:border-indigo-500/40 transition-all resize-none placeholder:text-slate-800"
+                  placeholder="Capture reflection..."
+                  value={responses[q.id] || ""}
+                  onChange={(e) => saveAnswer(e.target.value)}
+                />
               )}
 
               {q.type === 'multi-choice' && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {q.options?.map(opt => {
                     const active = (responses[q.id] || []).includes(opt);
                     return (
@@ -248,11 +241,11 @@ const App: React.FC = () => {
                           const current = responses[q.id] || [];
                           saveAnswer(active ? current.filter((i:any)=>i!==opt) : [...current, opt]);
                         }}
-                        className={`w-full p-8 text-left rounded-[2.5rem] border-2 transition-all flex justify-between items-center ${active ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5'}`}
+                        className={`w-full p-6 text-left rounded-3xl border-2 transition-all flex justify-between items-center ${active ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 bg-white/5'}`}
                       >
-                        <span className="font-bold text-slate-300 text-lg">{opt}</span>
-                        <div className={`w-10 h-10 rounded-2xl border-2 flex items-center justify-center transition-all ${active ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'}`}>
-                          {active && <span className="text-white text-lg">✓</span>}
+                        <span className="font-bold text-slate-300">{opt}</span>
+                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center ${active ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'}`}>
+                          {active && <span className="text-white text-xs">✓</span>}
                         </div>
                       </button>
                     );
@@ -263,25 +256,25 @@ const App: React.FC = () => {
               {q.type === 'consent' && (
                 <button 
                   onClick={() => saveAnswer(!responses[q.id])}
-                  className={`w-full p-14 rounded-[4rem] border-2 text-left flex items-center gap-12 transition-all group ${responses[q.id] ? 'border-indigo-500 bg-indigo-500/5' : 'border-white/5 hover:bg-white/5'}`}
+                  className={`w-full p-12 rounded-[4rem] border-2 text-left flex items-center gap-10 transition-all ${responses[q.id] ? 'border-indigo-500 bg-indigo-500/5' : 'border-white/5 hover:bg-white/5'}`}
                 >
-                  <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${responses[q.id] ? 'bg-indigo-500 border-indigo-500 scale-110' : 'border-slate-800'}`}>
-                    {responses[q.id] && <span className="text-white text-3xl">✓</span>}
+                  <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${responses[q.id] ? 'bg-indigo-500 border-indigo-500 scale-110 shadow-lg' : 'border-slate-800'}`}>
+                    {responses[q.id] && <span className="text-white text-2xl">✓</span>}
                   </div>
                   <div>
-                    <div className="font-bold text-3xl text-white italic serif mb-2">Seal Archive</div>
-                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.4em]">Auth required to transmit</div>
+                    <div className="font-bold text-2xl text-white italic serif mb-1">Grant Access</div>
+                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Authorize transmission</div>
                   </div>
                 </button>
               )}
             </div>
 
-            {/* Nav HUD */}
-            <div className="mt-24 pt-14 border-t border-white/5 flex items-center justify-between">
+            {/* Nav Footer */}
+            <div className="mt-20 pt-12 border-t border-white/5 flex items-center justify-between">
               <button 
                 onClick={() => setStep(s => s - 1)} 
                 disabled={step === 0}
-                className="text-[11px] font-black uppercase tracking-[0.6em] text-slate-700 hover:text-white disabled:opacity-0 transition-all px-4 py-2"
+                className="text-[11px] font-black uppercase tracking-[0.6em] text-slate-700 hover:text-white disabled:opacity-0 transition-all"
               >
                 Back
               </button>
@@ -289,15 +282,15 @@ const App: React.FC = () => {
               {step < QUESTIONS.length - 1 ? (
                 <button 
                   onClick={() => setStep(s => s + 1)}
-                  className="px-20 py-8 bg-white text-black rounded-full font-black text-xs uppercase tracking-[0.4em] hover:scale-110 active:scale-95 transition-all shadow-2xl"
+                  className="px-20 py-7 bg-white text-black rounded-full font-black text-xs uppercase tracking-[0.4em] hover:scale-110 active:scale-95 transition-all shadow-2xl"
                 >
-                  Proceed
+                  Continue
                 </button>
               ) : (
                 <button 
-                  onClick={submitFinal}
+                  onClick={handleFinalSubmit}
                   disabled={status === 'submitting'}
-                  className="px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-xs uppercase tracking-[0.4em] hover:scale-110 active:scale-95 transition-all shadow-2xl disabled:opacity-50"
+                  className="px-20 py-7 bg-indigo-600 text-white rounded-full font-black text-xs uppercase tracking-[0.4em] hover:scale-110 active:scale-95 transition-all shadow-2xl disabled:opacity-50"
                 >
                   {status === 'submitting' ? "Transmitting..." : "Sync Protocol"}
                 </button>
