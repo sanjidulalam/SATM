@@ -5,8 +5,8 @@ import { QUESTIONS } from './constants.tsx';
  * GOOGLE SHEET CONNECTION
  * Note: If this fails, the 'Download CSV' button will serve as a backup.
  */
-const DEPLOYMENT_ID = 'AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn';
-const GOOGLE_SHEET_URL = `https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`;
+const DEPLOYMENT_ID = 'AKfycbxJXKJsR59SAdq_7H2sM1SD-iapul8hKmcRjwRDnl8P-EFfLStYlzFA0kK82EbVh6Ef2g';
+const GOOGLE_SHEET_URL = `https://script.google.com/macros/s/AKfycbxJXKJsR59SAdq_7H2sM1SD-iapul8hKmcRjwRDnl8P-EFfLStYlzFA0kK82EbVh6Ef2g/exec`;
 const STORAGE_KEY = 'satm_survey_backup';
 
 const App: React.FC = () => {
