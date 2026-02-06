@@ -5,7 +5,7 @@ import { QUESTIONS } from './constants.tsx';
  * GOOGLE SHEET CONNECTION
  * Replace this URL with your 'exec' URL from Google Apps Script.
  */
-const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBtgrDlttC8cRnfLDlO_dffqygFab5JaI9RS1qXYk/dev';
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxMHeO13DgNDGikt9gZllcCTmWUCZmWmJ8lwt0V6b4rFANpZpDKoBVgD5eyrqkzZ-Cz/exec';
 const STORAGE_KEY = 'satm_survey_backup_v2';
 
 const App: React.FC = () => {
