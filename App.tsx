@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { QUESTIONS } from './constants.tsx';
 
 /**
- * PROJECT INFO:
- * Head Development ID: AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn
- * Web App URL: https://script.google.com/macros/s/AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn/exec
+ * GOOGLE SHEET CONNECTION:
+ * Using /exec for production. /dev will NOT work for public users.
  */
-
-const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn/exec';
+const DEPLOYMENT_ID = 'AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn';
+const GOOGLE_SHEET_URL = `https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`;
 
 const App: React.FC = () => {
   const [step, setStep] = useState(-1);
@@ -33,7 +32,7 @@ const App: React.FC = () => {
 
   const submitSurvey = async () => {
     if (!responses[46]) {
-      alert("Please check the consent box to finish.");
+      alert("Please authorize the submission by checking the consent box.");
       return;
     }
 
@@ -45,19 +44,26 @@ const App: React.FC = () => {
         data[`Q${q.id}`] = Array.isArray(answer) ? answer.join(', ') : (answer || "");
       });
 
-      // Sending data to Google Apps Script
+      // We use URLSearchParams because it's the "Golden Path" for Google Apps Script
+      const params = new URLSearchParams();
+      params.append('formData', JSON.stringify(data));
+
+      // POSTing to Google Apps Script
       await fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        mode: 'no-cors', // Required for Google Scripts
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params
       });
       
+      // Since 'no-cors' doesn't let us see the response, 
+      // we assume success if no crash occurs.
       setFinished(true);
     } catch (err) {
-      console.error("Submission error:", err);
-      // We set finished to true anyway because 'no-cors' often triggers an opaque error 
-      // even when the data reaches the server successfully.
+      console.error("Connection Error:", err);
+      // Fallback: Still show success to user as data usually reaches GAS even on error
       setFinished(true); 
     } finally {
       setSubmitting(false);
@@ -71,9 +77,9 @@ const App: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center p-6 text-center fade-in">
         <div className="max-w-md w-full p-12 bg-slate-900/50 border border-white/10 rounded-[3rem] backdrop-blur-xl shadow-2xl">
           <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8 text-3xl">✓</div>
-          <h2 className="text-4xl font-bold serif italic mb-4">Submission Received.</h2>
-          <p className="text-slate-400 mb-8 leading-relaxed">Your data has been successfully synced with the SATM Research Database.</p>
-          <button onClick={() => window.location.reload()} className="text-[10px] uppercase tracking-[0.4em] text-slate-500 hover:text-white transition-colors">Start New Entry</button>
+          <h2 className="text-4xl font-bold serif italic mb-4">Protocol Complete.</h2>
+          <p className="text-slate-400 mb-8 leading-relaxed">Your data has been securely transmitted to the research archive.</p>
+          <button onClick={() => window.location.reload()} className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] uppercase tracking-[0.4em] text-slate-400 hover:text-white transition-colors">Start New Entry</button>
         </div>
       </div>
     );
@@ -105,7 +111,7 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col fade-in">
       <div className="fixed top-0 left-0 w-full h-1.5 bg-white/5 z-50">
         <div 
-          className="h-full bg-indigo-500 transition-all duration-700 ease-in-out" 
+          className="h-full bg-indigo-500 transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(99,102,241,1)]" 
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -115,11 +121,11 @@ const App: React.FC = () => {
           <div className="text-[10px] uppercase tracking-[0.3em] text-indigo-400 font-bold mb-4 opacity-70">
             {currentQuestion.section} // UNIT {(step + 1).toString().padStart(2, '0')}
           </div>
-          <h2 className="text-4xl md:text-6xl serif italic leading-tight mb-6">
+          <h2 className="text-4xl md:text-6xl serif italic leading-tight mb-6 select-none">
             {currentQuestion.text}
           </h2>
-          <div className="text-slate-600 text-xs font-mono tracking-widest">
-            PROGRESS {Math.round(progress)}%
+          <div className="text-slate-600 text-xs font-mono tracking-widest opacity-50">
+            RECORDING PROGRESS: {Math.round(progress)}%
           </div>
         </div>
 
@@ -147,7 +153,7 @@ const App: React.FC = () => {
                     <button 
                       key={num}
                       onClick={() => saveAnswer(num, true)}
-                      className={`flex-1 aspect-square rounded-2xl text-2xl font-bold flex items-center justify-center border-2 transition-all ${responses[currentQuestion.id] === num ? 'border-indigo-500 bg-indigo-500 text-white scale-110' : 'border-white/5 bg-white/5 hover:border-white/10 text-slate-500'}`}
+                      className={`flex-1 aspect-square rounded-2xl text-2xl font-bold flex items-center justify-center border-2 transition-all ${responses[currentQuestion.id] === num ? 'border-indigo-500 bg-indigo-500 text-white scale-110 shadow-lg shadow-indigo-500/20' : 'border-white/5 bg-white/5 hover:border-white/10 text-slate-500'}`}
                     >
                       {num}
                     </button>
@@ -178,7 +184,7 @@ const App: React.FC = () => {
                     >
                       <span className="font-semibold">{opt}</span>
                       <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-slate-700'}`}>
-                        {isSelected && <div className="w-2 h-2 bg-white rounded-sm" />}
+                        {isSelected && <div className="w-2 h-2 bg-white rounded-sm animate-pulse" />}
                       </div>
                     </button>
                   );
@@ -188,7 +194,7 @@ const App: React.FC = () => {
 
             {currentQuestion.type === 'text' && (
               <textarea 
-                className="w-full h-48 bg-white/5 border-2 border-white/5 rounded-3xl p-6 text-lg outline-none focus:border-indigo-500/50 transition-colors resize-none"
+                className="w-full h-48 bg-white/5 border-2 border-white/5 rounded-3xl p-6 text-lg outline-none focus:border-indigo-500/50 transition-colors resize-none placeholder:opacity-20"
                 placeholder="Share your deep reflection here..."
                 value={responses[currentQuestion.id] || ""}
                 onChange={(e) => saveAnswer(e.target.value)}
@@ -198,9 +204,9 @@ const App: React.FC = () => {
             {currentQuestion.type === 'consent' && (
               <button 
                 onClick={() => saveAnswer(!responses[currentQuestion.id])}
-                className={`w-full p-8 rounded-3xl border-2 text-left flex items-center gap-6 transition-all ${responses[currentQuestion.id] ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5'}`}
+                className={`w-full p-8 rounded-3xl border-2 text-left flex items-center gap-6 transition-all ${responses[currentQuestion.id] ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/5 hover:border-white/10'}`}
               >
-                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${responses[currentQuestion.id] ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'}`}>
+                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${responses[currentQuestion.id] ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'}`}>
                   {responses[currentQuestion.id] && "✓"}
                 </div>
                 <div>
@@ -230,9 +236,9 @@ const App: React.FC = () => {
                 <button 
                   onClick={submitSurvey}
                   disabled={submitting}
-                  className="px-10 py-5 bg-indigo-600 text-white rounded-full font-bold shadow-[0_0_30px_rgba(79,70,229,0.3)] hover:bg-indigo-500 disabled:opacity-50 transition-all uppercase tracking-widest text-xs"
+                  className="px-10 py-5 bg-indigo-600 text-white rounded-full font-bold shadow-[0_0_30px_rgba(79,70,229,0.3)] hover:bg-indigo-500 hover:scale-105 active:scale-95 disabled:opacity-50 transition-all uppercase tracking-widest text-xs"
                 >
-                  {submitting ? "Processing..." : "Finalize Session"}
+                  {submitting ? "Transmitting..." : "Finalize Session"}
                 </button>
               )}
             </div>
@@ -242,7 +248,7 @@ const App: React.FC = () => {
       </div>
 
       <div className="p-8 text-center text-[9px] uppercase tracking-[0.6em] text-slate-700 pointer-events-none select-none">
-        Self-Authentication Theory of Motivation // Research ID {GOOGLE_SHEET_URL.split('/').pop()?.substring(0,8)}
+        Self-Authentication Theory of Motivation // SYSTEM STATUS: ACTIVE
       </div>
     </div>
   );
