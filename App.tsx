@@ -4,18 +4,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { QUESTIONS, SECTIONS } from './constants';
 import { SurveyResponse, Question } from './types';
 
+// Types & Interfaces
+interface QuestionStepProps {
+  question: Question;
+  value: any;
+  onChange: (val: any) => void;
+  onNext: () => void;
+  onPrev: () => void;
+  isLast: boolean;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  totalQuestions: number;
+  currentIdx: number;
+}
+
 /**
- * EASY DATABASE CONFIGURATION
- * 1. Create a Google Sheet.
- * 2. Go to Extensions > Apps Script.
- * 3. Paste the provided bridge script.
- * 4. Deploy as "Web App" (Access: Anyone).
- * 5. Paste the URL below.
+ * DATABASE CONFIGURATION
+ * Successfully updated with your personal Apps Script URL.
  */
 const CONFIG = {
-  // Paste your Google Apps Script Web App URL here
-  databaseUrl: 'https://script.google.com/macros/s/AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn/dev',
-  // Set this to true to allow local testing download even if DB fails
+  databaseUrl: 'https://script.google.com/macros/s/AKfycbwki1FJjtZOevxo3BTR5qEZyf5fsy17ayO1EW8PQBRuXTOA-gmjpqRmCxnxLnrzIbPdZQ/exec',
   allowLocalBackup: true 
 };
 
@@ -451,19 +459,6 @@ const QuestionStep: React.FC<QuestionStepProps> = ({
   );
 };
 
-interface QuestionStepProps {
-  question: Question;
-  value: any;
-  onChange: (val: any) => void;
-  onNext: () => void;
-  onPrev: () => void;
-  isLast: boolean;
-  onSubmit: () => void;
-  isSubmitting: boolean;
-  totalQuestions: number;
-  currentIdx: number;
-}
-
 // Main App Component
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(-1);
@@ -506,19 +501,19 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      // Send as JSON to the Apps Script bridge
-      if (CONFIG.databaseUrl !== 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
-        const response = await fetch(CONFIG.databaseUrl, {
+      // Map responses to include actual question text for better readability in Excel
+      const mappedData = QUESTIONS.reduce((acc, q) => {
+        acc[`Q${q.id}: ${q.text}`] = responses[q.id] || "No response";
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Send to the Apps Script bridge
+      if (CONFIG.databaseUrl && !CONFIG.databaseUrl.includes('PASTE_YOUR_APPS_SCRIPT_URL_HERE')) {
+        await fetch(CONFIG.databaseUrl, {
           method: 'POST',
-          body: JSON.stringify(responses)
+          mode: 'no-cors', // Essential for Apps Script
+          body: JSON.stringify(mappedData)
         });
-        
-        if (!response.ok && !CONFIG.allowLocalBackup) {
-          throw new Error('Database connection failed');
-        }
-      } else {
-        // Fallback for demo mode
-        await new Promise(r => setTimeout(r, 2000));
       }
 
       setIsSubmitting(false);
