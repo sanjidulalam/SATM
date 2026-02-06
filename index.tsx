@@ -2,8 +2,6 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 
-console.log("SATM Protocol Initializing...");
-
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
@@ -12,6 +10,4 @@ if (container) {
       <App />
     </React.StrictMode>
   );
-} else {
-  console.error("Root container not found. Check index.html.");
 }
