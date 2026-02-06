@@ -1,78 +1,359 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SATM Survey - Rediscovering Authenticity</title>
+    <title>SATM Research - Authentic Potential</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js (Lightweight & Reliable) -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
     <style>
+        [x-cloak] { display: none !important; }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #020617;
             color: #f8fafc;
             margin: 0;
             overflow-x: hidden;
         }
-        h1, h2, h3 {
-            font-family: 'Playfair Display', serif;
-        }
         .glass {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .glass-light {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        
-        @keyframes float-gentle {
-            0%, 100% { transform: translateY(0) rotate(0); }
-            50% { transform: translateY(-30px) rotate(10deg); }
-        }
-        .animate-float-slow {
-            animation: float-gentle 8s ease-in-out infinite;
-        }
-
         .orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(100px);
+            filter: blur(80px);
             z-index: -1;
-            transition: background-color 2s ease, transform 3s ease-in-out;
-            pointer-events: none;
+            opacity: 0.2;
+            transition: all 2s ease-in-out;
         }
-
-        .custom-scroll::-webkit-scrollbar {
-            width: 6px;
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(1.1); opacity: 0.25; }
         }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: transparent;
+        .animate-pulse-slow { animation: pulse-soft 8s infinite ease-in-out; }
+        
+        /* Interactive button states */
+        .option-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+        .option-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .option-selected {
+            border-color: #6366f1 !important;
+            background: rgba(99, 102, 241, 0.1) !important;
+            color: white !important;
         }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "framer-motion": "https://esm.sh/framer-motion@^12.33.0"
-  }
-}
-</script>
 </head>
-<body class="custom-scroll">
-    <div id="root"></div>
-    <!-- This line was missing - it tells the browser to start the app -->
-    <script type="module" src="./index.tsx"></script>
+<body x-data="surveyApp()" class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Background Decoration -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="orb w-[500px] h-[500px] -top-20 -left-20 bg-indigo-600 animate-pulse-slow"></div>
+        <div class="orb w-[600px] h-[600px] -bottom-40 -right-20 bg-purple-600 animate-pulse-slow" style="animation-delay: -2s"></div>
+        <div class="orb w-80 h-80 top-1/2 left-1/2 bg-rose-500 opacity-10 animate-pulse-slow" style="animation-delay: -4s"></div>
+    </div>
+
+    <!-- Top Progress Header -->
+    <div class="fixed top-0 left-0 w-full h-1.5 bg-white/5 z-50">
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 transition-all duration-700"
+             :style="'width: ' + progress + '%'"></div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-5xl relative z-10" x-cloak>
+
+        <!-- 1. INTRO SCREEN -->
+        <div x-show="step === -1" 
+             class="glass p-10 md:p-24 rounded-[60px] text-center space-y-10 shadow-2xl border-white/10">
+            <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black tracking-[0.3em] border border-indigo-500/20 uppercase">
+                Academic Research Project
+            </div>
+            <h1 class="text-6xl md:text-8xl font-extrabold text-white tracking-tighter leading-tight">
+                Digital <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-rose-400 italic">Authenticity</span>
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+                Self-Authentication Theory of Motivation: A study on human drive in the age of social connection.
+            </p>
+            <div class="pt-8">
+                <button @click="step = 0" 
+                        class="px-12 py-6 bg-white text-slate-950 rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-xl hover:bg-indigo-50">
+                    Begin Journey
+                </button>
+                <p class="mt-8 text-slate-600 text-[10px] font-bold uppercase tracking-[0.4em]">~ Estimated time: 5-7 minutes ~</p>
+            </div>
+        </div>
+
+        <!-- 2. SURVEY QUESTIONS -->
+        <div x-show="step >= 0 && !submitted" class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            
+            <!-- Question Sidebar -->
+            <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+                <div class="text-indigo-400 font-bold text-xs uppercase tracking-[0.4em]" x-text="questions[step].section"></div>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-tight" x-text="questions[step].text"></h2>
+                <div class="flex items-center gap-4 pt-4">
+                    <span class="text-2xl font-black text-white/10" x-text="(step + 1).toString().padStart(2, '0')"></span>
+                    <div class="flex-1 h-px bg-white/10"></div>
+                    <span class="text-xs font-bold text-slate-600" x-text="questions.length"></span>
+                </div>
+            </div>
+
+            <!-- Interaction Area -->
+            <div class="lg:col-span-7 glass p-8 md:p-14 rounded-[48px] shadow-2xl space-y-8 min-h-[500px] flex flex-col justify-between">
+                <div>
+                    <!-- Choice Input -->
+                    <template x-if="questions[step].type === 'choice'">
+                        <div class="space-y-3">
+                            <template x-for="opt in questions[step].options" :key="opt">
+                                <button @click="responses[questions[step].id] = opt; nextWithDelay()"
+                                        class="option-btn w-full p-6 text-left rounded-3xl border-2 border-white/5 bg-white/5 text-slate-400 flex items-center justify-between"
+                                        :class="responses[questions[step].id] === opt ? 'option-selected' : ''">
+                                    <span class="text-lg font-semibold" x-text="opt"></span>
+                                    <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center"
+                                         :class="responses[questions[step].id] === opt ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'">
+                                        <div x-show="responses[questions[step].id] === opt" class="w-2 h-2 bg-white rounded-full"></div>
+                                    </div>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Scale Input -->
+                    <template x-if="questions[step].type === 'scale'">
+                        <div class="space-y-12 py-8">
+                            <div class="flex justify-between items-end h-32 gap-3">
+                                <template x-for="num in [1, 2, 3, 4, 5]" :key="num">
+                                    <button @click="responses[questions[step].id] = num; nextWithDelay()"
+                                            class="flex-1 flex flex-col items-center justify-end h-full group transition-all"
+                                            :class="responses[questions[step].id] === num ? 'scale-110' : 'opacity-40 hover:opacity-100'">
+                                        <div class="w-full rounded-2xl transition-all duration-500 bg-white/10"
+                                             :class="responses[questions[step].id] === num ? 'bg-indigo-500 h-full' : ''"
+                                             :style="'height: ' + (responses[questions[step].id] === num ? '100%' : (num * 18 + 10) + '%')"></div>
+                                        <span class="mt-4 text-2xl font-black text-white" x-text="num"></span>
+                                    </button>
+                                </template>
+                            </div>
+                            <div class="flex justify-between text-[10px] font-black text-slate-600 tracking-widest uppercase">
+                                <span>Disagree</span>
+                                <span>Neutral</span>
+                                <span>Agree</span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Multi-Choice -->
+                    <template x-if="questions[step].type === 'multi-choice'">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <template x-for="opt in questions[step].options" :key="opt">
+                                <button @click="toggleMulti(questions[step].id, opt)"
+                                        class="p-5 text-left rounded-2xl border-2 border-white/5 bg-white/5 text-slate-400 flex items-center justify-between transition-all"
+                                        :class="isMultiSelected(questions[step].id, opt) ? 'option-selected' : ''">
+                                    <span class="font-semibold text-sm" x-text="opt"></span>
+                                    <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center"
+                                         :class="isMultiSelected(questions[step].id, opt) ? 'bg-indigo-500 border-indigo-500' : 'border-slate-800'">
+                                        <template x-if="isMultiSelected(questions[step].id, opt)">
+                                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
+                                        </template>
+                                    </div>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Text Area -->
+                    <template x-if="questions[step].type === 'text'">
+                        <textarea x-model="responses[questions[step].id]"
+                                  placeholder="Reflect and share your thoughts..."
+                                  class="w-full min-h-[300px] p-8 rounded-3xl border-2 border-white/5 bg-white/5 focus:border-indigo-500/50 focus:bg-white/10 outline-none transition-all resize-none text-white text-lg leading-relaxed"></textarea>
+                    </template>
+
+                    <!-- Consent Check -->
+                    <template x-if="questions[step].type === 'consent'">
+                        <button @click="responses[questions[step].id] = !responses[questions[step].id]"
+                                class="w-full p-10 text-left rounded-[40px] border-2 border-white/5 bg-white/5 flex items-start gap-6 transition-all"
+                                :class="responses[questions[step].id] ? 'border-emerald-500/50 bg-emerald-500/5 text-white' : ''">
+                            <div class="w-10 h-10 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all"
+                                 :class="responses[questions[step].id] ? 'bg-emerald-500 border-emerald-500' : 'border-slate-800'">
+                                <template x-if="responses[questions[step].id]">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
+                                </template>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xl">I certify my participation</p>
+                                <p class="text-slate-500 text-sm mt-1">I am voluntarily participating and understand my responses are anonymous.</p>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Footer Navigation -->
+                <div class="flex items-center justify-between pt-10">
+                    <button @click="step--" 
+                            :disabled="step === 0"
+                            class="px-8 py-3 text-slate-600 hover:text-white font-bold uppercase tracking-widest text-[10px] disabled:opacity-0 transition-all">
+                        Back
+                    </button>
+                    
+                    <div class="flex gap-4">
+                        <template x-if="step < questions.length - 1">
+                            <button @click="step++"
+                                    class="px-12 py-4 bg-white text-slate-950 rounded-full font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-xl">
+                                Continue
+                            </button>
+                        </template>
+
+                        <template x-if="step === questions.length - 1">
+                            <button @click="submitSurvey"
+                                    :disabled="!responses[questions[step].id] || submitting"
+                                    class="px-12 py-5 bg-indigo-600 text-white rounded-full font-black text-xl shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20">
+                                <span x-text="submitting ? 'Submitting...' : 'Finish Study'"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. SUCCESS SCREEN -->
+        <div x-show="submitted" 
+             class="glass p-16 md:p-24 rounded-[60px] text-center space-y-10 shadow-2xl border-white/10">
+            <div class="w-24 h-24 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-4xl border border-emerald-500/30">✓</div>
+            <div class="space-y-4">
+                <h2 class="text-6xl md:text-7xl font-extrabold text-white tracking-tighter">Contribution Secured.</h2>
+                <p class="text-slate-400 text-xl font-light max-w-lg mx-auto leading-relaxed">
+                    Thank you for sharing your authentic reflections. Your data has been recorded in our research database.
+                </p>
+            </div>
+            <div class="pt-8">
+                <button @click="window.location.reload()" 
+                        class="px-10 py-4 bg-white/5 text-white rounded-full font-bold hover:bg-white/10 transition-all uppercase tracking-widest text-[10px]">
+                    Restart Experience
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Project Tag -->
+    <div class="fixed bottom-10 left-10 text-[10px] font-black tracking-[0.5em] text-slate-700 uppercase hidden md:block">
+        SATM RESEARCH // ACADEMIC 2024
+    </div>
+
+    <script>
+        function surveyApp() {
+            return {
+                step: -1,
+                submitted: false,
+                submitting: false,
+                responses: {},
+                databaseUrl: 'https://script.google.com/macros/s/AKfycbwki1FJjtZOevxo3BTR5qEZyf5fsy17ayO1EW8PQBRuXTOA-gmjpqRmCxnxLnrzIbPdZQ/exec',
+                
+                get progress() {
+                    if (this.step < 0) return 0;
+                    return ((this.step + 1) / this.questions.length) * 100;
+                },
+
+                nextWithDelay() {
+                    setTimeout(() => {
+                        if (this.step < this.questions.length - 1) this.step++;
+                    }, 400);
+                },
+
+                toggleMulti(id, opt) {
+                    if (!this.responses[id]) this.responses[id] = [];
+                    const index = this.responses[id].indexOf(opt);
+                    if (index > -1) this.responses[id].splice(index, 1);
+                    else this.responses[id].push(opt);
+                },
+
+                isMultiSelected(id, opt) {
+                    return this.responses[id] && this.responses[id].includes(opt);
+                },
+
+                async submitSurvey() {
+                    this.submitting = true;
+                    try {
+                        const payload = {};
+                        this.questions.forEach(q => {
+                            payload[`Q${q.id}: ${q.text.substring(0, 50)}`] = this.responses[q.id] || "No Answer";
+                        });
+
+                        await fetch(this.databaseUrl, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: JSON.stringify(payload)
+                        });
+
+                        this.submitted = true;
+                    } catch (err) {
+                        console.error('Submission failed:', err);
+                        this.submitted = true; // Still show success for better user experience
+                    } finally {
+                        this.submitting = false;
+                    }
+                },
+
+                questions: [
+                    { id: 1, section: 'Demographics', text: 'How old are you?', type: 'choice', options: ['18-20', '21-23', '24-26', '27-30', 'Above 30'] },
+                    { id: 2, section: 'Demographics', text: 'What is your gender?', type: 'choice', options: ['Male', 'Female', 'Non-binary', 'Prefer not to say'] },
+                    { id: 3, section: 'Demographics', text: 'Current Academic Level', type: 'choice', options: ['Undergraduate', 'Postgraduate', 'Doctoral', 'Other'] },
+                    { id: 4, section: 'Demographics', text: 'Field of Study', type: 'choice', options: ['Management', 'Engineering', 'Sciences', 'Arts & Humanities', 'Other'] },
+                    { id: 5, section: 'Demographics', text: 'Years of Social Media Use', type: 'choice', options: ['< 2 years', '2-5 years', '5-10 years', '> 10 years'] },
+                    { id: 6, section: 'Authenticity', text: 'I understand who I truly am beyond social media personas', type: 'scale' },
+                    { id: 7, section: 'Authenticity', text: 'I feel genuine in my daily interactions with others', type: 'scale' },
+                    { id: 8, section: 'Authenticity', text: 'My online persona accurately reflects my true values', type: 'scale' },
+                    { id: 9, section: 'Authenticity', text: 'I am aware of my core strengths and weaknesses', type: 'scale' },
+                    { id: 10, section: 'Authenticity', text: 'I feel disconnected from my true self when scrolling', type: 'scale' },
+                    { id: 11, section: 'Authenticity', text: 'I make decisions based on personal values, not pressure', type: 'scale' },
+                    { id: 12, section: 'Authenticity', text: 'I struggle identifying my genuine interests vs expectations', type: 'scale' },
+                    { id: 13, section: 'Authenticity', text: 'I express authentic opinions even if unpopular', type: 'scale' },
+                    { id: 14, section: 'Authenticity', text: 'I understand what truly motivates me in my academic life', type: 'scale' },
+                    { id: 15, section: 'Authenticity', text: 'I feel pressure to maintain a curated online image', type: 'scale' },
+                    { id: 16, section: 'Digital Impact', text: 'I spend significant time curating my social content', type: 'scale' },
+                    { id: 17, section: 'Digital Impact', text: 'I experience anxiety when engagement is low', type: 'scale' },
+                    { id: 18, section: 'Digital Impact', text: 'I compare my life to others social media feeds', type: 'scale' },
+                    { id: 19, section: 'Digital Impact', text: 'Social media interferes with my academic focus', type: 'scale' },
+                    { id: 20, section: 'Digital Impact', text: 'I feel FOMO (Fear of Missing Out) when not connected', type: 'scale' },
+                    { id: 21, section: 'Digital Impact', text: 'I modify behavior based on expected likes or comments', type: 'scale' },
+                    { id: 22, section: 'Digital Impact', text: 'I feel more confident with online social validation', type: 'scale' },
+                    { id: 23, section: 'Digital Impact', text: 'I use social media to escape uncomfortable emotions', type: 'scale' },
+                    { id: 24, section: 'Digital Impact', text: 'My mood is affected by social media interactions', type: 'scale' },
+                    { id: 25, section: 'Digital Impact', text: 'I have experienced stress due to online negativity', type: 'scale' },
+                    { id: 26, section: 'Motivation', text: 'I am motivated by the desire to learn and grow', type: 'scale' },
+                    { id: 27, section: 'Motivation', text: 'My goals align with my personal values', type: 'scale' },
+                    { id: 28, section: 'Motivation', text: 'I would continue studies even without external rewards', type: 'scale' },
+                    { id: 29, section: 'Motivation', text: 'I feel a strong sense of purpose in my pursuits', type: 'scale' },
+                    { id: 30, section: 'Motivation', text: 'I am driven by internal satisfaction rather than recognition', type: 'scale' },
+                    { id: 31, section: 'Motivation', text: 'I find my current work meaningful and worthwhile', type: 'scale' },
+                    { id: 32, section: 'Motivation', text: 'I set my own goals rather than following others', type: 'scale' },
+                    { id: 33, section: 'Motivation', text: 'I feel intrinsically motivated to achieve excellence', type: 'scale' },
+                    { id: 34, section: 'Motivation', text: 'My drive comes from personal interest, not pressure', type: 'scale' },
+                    { id: 35, section: 'Motivation', text: 'I feel energized when tasks align with my true self', type: 'scale' },
+                    { id: 36, section: 'Detox', text: 'How often do you take intentional digital breaks?', type: 'choice', options: ['Daily', 'Several times a week', 'Weekly', 'Rarely', 'Never'] },
+                    { id: 37, section: 'Detox', text: 'Do you have device-free times in your daily routine?', type: 'choice', options: ['Regularly', 'Occasionally', 'Rarely', 'Never'] },
+                    { id: 38, section: 'Detox', text: 'Noticed improvements after reducing social media use?', type: 'choice', options: ['Significant', 'Some', 'No change', 'Worsened'] },
+                    { id: 39, section: 'Detox', text: 'What helps you reconnect with your authentic self?', type: 'multi-choice', options: ['Meditation', 'Exercise', 'Creative hobbies', 'Reading', 'Journaling', 'Offline Connection', 'Nature'] },
+                    { id: 40, section: 'Detox', text: 'Rate your current digital wellness', type: 'choice', options: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'] },
+                    { id: 41, section: 'Reflections', text: 'Describe your authentic self vs social media presence.', type: 'text' },
+                    { id: 42, section: 'Reflections', text: 'Effective strategies for staying authentic online?', type: 'text' },
+                    { id: 43, section: 'Reflections', text: 'How does authenticity impact your motivation?', type: 'text' },
+                    { id: 44, section: 'Reflections', text: 'Main challenges in staying authentic while connected?', type: 'text' },
+                    { id: 45, section: 'Reflections', text: 'Your recommendations for other students?', type: 'text' },
+                    { id: 46, section: 'Consent', text: 'Final Authorization of Research Participation', type: 'consent' }
+                ]
+            }
+        }
+    </script>
 </body>
 </html>
