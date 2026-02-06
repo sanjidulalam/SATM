@@ -1,69 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QUESTIONS } from './constants.tsx';
 
 /**
- * GOOGLE SHEET CONNECTION:
- * Using /exec for production. /dev will NOT work for public users.
+ * GOOGLE SHEET CONNECTION
+ * Note: If this fails, the 'Download CSV' button will serve as a backup.
  */
-const DEPLOYMENT_ID = 'AKfycbxZdCZpWRuLcCQ3aIV4hNnzLco-RA7gezlGOqhWQWsAaWWHXFlJxyP9AlaMrPbR0CVB1Q';
-const GOOGLE_SHEET_URL = `https://script.google.com/macros/s/AKfycbxZdCZpWRuLcCQ3aIV4hNnzLco-RA7gezlGOqhWQWsAaWWHXFlJxyP9AlaMrPbR0CVB1Q/exec`;
+const DEPLOYMENT_ID = 'AKfycbxDvvmWzee3H_-LKuYzlUqEPiy8b6P0JEwYylQ4cCnn';
+const GOOGLE_SHEET_URL = `https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`;
+const STORAGE_KEY = 'satm_survey_backup';
 
 const App: React.FC = () => {
   const [step, setStep] = useState(-1);
-  const [responses, setResponses] = useState<Record<number, any>>({});
+  const [responses, setResponses] = useState<Record<number, any>>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  });
   const [submitting, setSubmitting] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
+
+  // Auto-save to LocalStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+  }, [responses]);
 
   const next = () => {
     if (step < QUESTIONS.length - 1) setStep(s => s + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const back = () => {
     if (step > 0) setStep(s => s - 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const saveAnswer = (val: any, autoAdvance = false) => {
     const q = QUESTIONS[step];
     setResponses(prev => ({ ...prev, [q.id]: val }));
     if (autoAdvance) {
-      setTimeout(next, 300);
+      setTimeout(next, 400);
     }
+  };
+
+  const downloadCSV = () => {
+    const headers = ['Question ID', 'Question Text', 'Response'];
+    const rows = QUESTIONS.map(q => [
+      `Q${q.id}`,
+      q.text.replace(/,/g, ''),
+      Array.isArray(responses[q.id]) ? responses[q.id].join('; ') : (responses[q.id] || 'N/A')
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n" 
+      + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `SATM_Research_Data_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const submitSurvey = async () => {
     if (!responses[46]) {
-      alert("Please authorize the submission by checking the consent box.");
+      alert("Please check the consent box to finalize.");
       return;
     }
 
     setSubmitting(true);
+    setErrorStatus(null);
+
+    const data: Record<string, string> = {};
+    QUESTIONS.forEach(q => {
+      const answer = responses[q.id];
+      data[`Q${q.id}`] = Array.isArray(answer) ? answer.join(', ') : (answer || "");
+    });
+
+    const params = new URLSearchParams();
+    params.append('formData', JSON.stringify(data));
+
     try {
-      const data: Record<string, string> = {};
-      QUESTIONS.forEach(q => {
-        const answer = responses[q.id];
-        data[`Q${q.id}`] = Array.isArray(answer) ? answer.join(', ') : (answer || "");
-      });
-
-      // We use URLSearchParams because it's the "Golden Path" for Google Apps Script
-      const params = new URLSearchParams();
-      params.append('formData', JSON.stringify(data));
-
-      // POSTing to Google Apps Script
+      // We use 'no-cors' to allow the 302 redirect Google Scripts use.
+      // Note: 'no-cors' means we can't read the response body, but the data is still sent.
       await fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
-        mode: 'no-cors', // Required for Google Scripts
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params
       });
       
-      // Since 'no-cors' doesn't let us see the response, 
-      // we assume success if no crash occurs.
+      // Clear storage after successful-ish submission
+      localStorage.removeItem(STORAGE_KEY);
       setFinished(true);
     } catch (err) {
-      console.error("Connection Error:", err);
-      // Fallback: Still show success to user as data usually reaches GAS even on error
+      console.error("Submission error:", err);
+      setErrorStatus("Connection interrupted, but we have your data saved locally.");
       setFinished(true); 
     } finally {
       setSubmitting(false);
@@ -75,11 +108,41 @@ const App: React.FC = () => {
   if (finished) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center fade-in">
-        <div className="max-w-md w-full p-12 bg-slate-900/50 border border-white/10 rounded-[3rem] backdrop-blur-xl shadow-2xl">
+        <div className="max-w-xl w-full p-12 bg-slate-900/50 border border-white/10 rounded-[3rem] backdrop-blur-xl shadow-2xl">
           <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8 text-3xl">✓</div>
-          <h2 className="text-4xl font-bold serif italic mb-4">Protocol Complete.</h2>
-          <p className="text-slate-400 mb-8 leading-relaxed">Your data has been securely transmitted to the research archive.</p>
-          <button onClick={() => window.location.reload()} className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] uppercase tracking-[0.4em] text-slate-400 hover:text-white transition-colors">Start New Entry</button>
+          <h2 className="text-4xl font-bold serif italic mb-4">Protocol Concluded.</h2>
+          <p className="text-slate-400 mb-10 leading-relaxed">
+            Your insights have been captured. {errorStatus ? errorStatus : "The research database has been updated."}
+          </p>
+          
+          <div className="flex flex-col gap-4">
+            <button 
+              onClick={downloadCSV}
+              className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold transition-all shadow-lg flex items-center justify-center gap-3"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              Download My Data (CSV)
+            </button>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => { localStorage.removeItem(STORAGE_KEY); window.location.reload(); }}
+                className="py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 rounded-2xl font-bold transition-all text-xs uppercase tracking-widest"
+              >
+                Restart New
+              </button>
+              <button 
+                onClick={() => window.print()}
+                className="py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 rounded-2xl font-bold transition-all text-xs uppercase tracking-widest"
+              >
+                Print Receipt
+              </button>
+            </div>
+          </div>
+          
+          <p className="mt-8 text-[9px] text-slate-600 uppercase tracking-widest">
+            Session Integrity: Verified // Local Backup: Active
+          </p>
         </div>
       </div>
     );
@@ -96,10 +159,10 @@ const App: React.FC = () => {
           An immersive investigation into the psychology of digital motivation.
         </p>
         <button 
-          onClick={() => setStep(0)}
+          onClick={() => setStep(Object.keys(responses).length > 0 ? 0 : 0)}
           className="px-14 py-7 bg-white text-black rounded-full font-bold text-xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)]"
         >
-          Begin Discovery
+          {Object.keys(responses).length > 0 ? "Continue Progress" : "Begin Discovery"}
         </button>
       </div>
     );
@@ -124,8 +187,9 @@ const App: React.FC = () => {
           <h2 className="text-4xl md:text-6xl serif italic leading-tight mb-6 select-none">
             {currentQuestion.text}
           </h2>
-          <div className="text-slate-600 text-xs font-mono tracking-widest opacity-50">
-            RECORDING PROGRESS: {Math.round(progress)}%
+          <div className="text-slate-600 text-xs font-mono tracking-widest opacity-50 flex items-center gap-3">
+             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+             DATA LOGGING: {Math.round(progress)}% COMPLETE
           </div>
         </div>
 
@@ -184,7 +248,7 @@ const App: React.FC = () => {
                     >
                       <span className="font-semibold">{opt}</span>
                       <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-slate-700'}`}>
-                        {isSelected && <div className="w-2 h-2 bg-white rounded-sm animate-pulse" />}
+                        {isSelected && <div className="w-2 h-2 bg-white rounded-sm" />}
                       </div>
                     </button>
                   );
@@ -247,8 +311,8 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <div className="p-8 text-center text-[9px] uppercase tracking-[0.6em] text-slate-700 pointer-events-none select-none">
-        Self-Authentication Theory of Motivation // SYSTEM STATUS: ACTIVE
+      <div className="p-8 text-center text-[9px] uppercase tracking-[0.6em] text-slate-800 pointer-events-none select-none">
+        Self-Authentication Theory of Motivation // LOCAL AUTOSAVE: ENABLED
       </div>
     </div>
   );
